@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codeeditor-config
+  namespace: codeeditor
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  DB_URL: "jdbc:postgresql://postgres-service:5432/codeeditor"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  KAFKA_SERVERS: "kafka-service:9092"
+  SERVER_PORT: "8080"

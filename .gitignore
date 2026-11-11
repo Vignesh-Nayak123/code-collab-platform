@@ -1,0 +1,50 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/
+!.mvn/wrapper/maven-wrapper.properties
+mvnw.cmd
+
+# Node / npm
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# Build artifacts
+*.pid
+*.seed
+logs/
+tmp/
+temp/
+
+# Stray Maven log file (no extension, written when Maven output is redirected)
+backend/org
+
+# Load-test run artifacts (keep the scripts and ws-perf-report.md)
+loadtest/*.json
+loadtest/*.log
+loadtest/*.txt
+loadtest/*.err
