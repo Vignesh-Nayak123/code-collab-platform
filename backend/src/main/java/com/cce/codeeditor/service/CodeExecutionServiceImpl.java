@@ -1,7 +1,7 @@
 package com.cce.codeeditor.service;
 
 import com.cce.codeeditor.exception.RoomNotFoundException;
-import com.cce.codeeditor.kafka.ExecutionRequestProducer;
+import com.cce.codeeditor.execution.ExecutionDispatcher;
 import com.cce.codeeditor.model.dto.ExecutionRequest;
 import com.cce.codeeditor.model.dto.ExecutionResponse;
 import com.cce.codeeditor.model.entity.ExecutionResult;
@@ -9,9 +9,6 @@ import com.cce.codeeditor.model.entity.Room;
 import com.cce.codeeditor.model.enums.ExecutionStatus;
 import com.cce.codeeditor.repository.ExecutionResultRepository;
 import com.cce.codeeditor.repository.RoomRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,8 +23,7 @@ public class CodeExecutionServiceImpl implements CodeExecutionService {
 
     private final ExecutionResultRepository executionResultRepository;
     private final RoomRepository roomRepository;
-    private final ExecutionRequestProducer executionRequestProducer;
-    private final ObjectMapper objectMapper;
+    private final ExecutionDispatcher executionDispatcher;
 
     @Override
     @Transactional
@@ -45,12 +41,7 @@ public class CodeExecutionServiceImpl implements CodeExecutionService {
 
         result = executionResultRepository.save(result);
 
-        try {
-            String payload = objectMapper.writeValueAsString(new ExecutionPayload(result.getId(), request));
-            executionRequestProducer.sendExecutionRequest(result.getId().toString(), payload);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize execution request", e);
-        }
+        executionDispatcher.dispatch(result, request);
 
         return ExecutionResponse.builder()
                 .executionId(result.getId())

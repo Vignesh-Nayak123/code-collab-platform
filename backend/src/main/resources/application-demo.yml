@@ -1,0 +1,46 @@
+# Free-tier "demo" profile (e.g. Render free web service: 512 MB RAM, 0.1 CPU,
+# spins down when idle, no Docker daemon). Activate with
+# SPRING_PROFILES_ACTIVE=prod,demo.
+#
+# - No Kafka: auto-configuration is excluded and every Kafka bean is gated off
+#   by app.execution.mode != kafka.
+# - No code execution: there is no sandbox on the platform.
+# - Small pools/threads to stay inside 512 MB.
+# Redis and PostgreSQL are still required (Render Key Value + Render Postgres).
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  datasource:
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+  jpa:
+    open-in-view: false
+
+server:
+  tomcat:
+    threads:
+      max: 40
+      min-spare: 2
+
+app:
+  execution:
+    # Do not switch this to inline/kafka on a host without an isolated Docker
+    # sandbox: user code would run with the backend's privileges and secrets.
+    mode: ${EXECUTION_MODE:disabled}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+# prod sets root=WARN; keep the startup time and the CORS origin list visible in Render's logs.
+logging:
+  level:
+    com.cce.codeeditor.CodeEditorApplication: INFO # "Started CodeEditorApplication in N seconds"
+    com.cce.codeeditor.config.AllowedOrigins: INFO

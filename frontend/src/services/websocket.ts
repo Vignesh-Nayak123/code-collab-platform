@@ -1,5 +1,6 @@
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { getWebSocketUrl } from '../config';
 import type {
   CodeChangeMessage,
   CursorPositionMessage,
@@ -29,7 +30,7 @@ class WebSocketService {
     this.roomCode = roomCode;
     this.handlers = handlers;
 
-    const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol}//${window.location.host}/ws`;
+    const wsUrl = getWebSocketUrl();
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(wsUrl),

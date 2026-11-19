@@ -1,5 +1,6 @@
 package com.cce.codeeditor.kafka;
 
+import com.cce.codeeditor.config.ConditionalOnKafkaExecution;
 import com.cce.codeeditor.execution.DockerExecutionService;
 import com.cce.codeeditor.model.entity.ExecutionResult;
 import com.cce.codeeditor.model.enums.ExecutionStatus;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@ConditionalOnKafkaExecution
 @RequiredArgsConstructor
 @Slf4j
 public class ExecutionResultConsumer {

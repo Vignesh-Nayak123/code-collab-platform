@@ -5,7 +5,8 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/codeeditor}
+    # DB_URL wins if set; otherwise it is built from DB_HOST/DB_PORT/DB_NAME (what Render's Blueprint provides).
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:codeeditor}}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -53,9 +54,20 @@ spring:
       auto-offset-reset: earliest
 
 server:
-  port: ${SERVER_PORT:8080}
+  # Render injects PORT; SERVER_PORT still takes precedence for docker-compose/k8s.
+  port: ${SERVER_PORT:${PORT:8080}}
   servlet:
     context-path: /
+
+app:
+  execution:
+    # kafka (default): queue runs through Kafka -> Docker sandbox
+    # inline: no Kafka, runs one at a time in-process -> Docker sandbox (Docker daemon still required)
+    # disabled: never runs user code; returns an explanatory FAILED result
+    mode: ${EXECUTION_MODE:kafka}
+  cors:
+    # Comma-separated origin patterns for REST CORS and the /ws handshake.
+    allowed-origins: ${ALLOWED_ORIGINS:*}
 
 management:
   endpoints:

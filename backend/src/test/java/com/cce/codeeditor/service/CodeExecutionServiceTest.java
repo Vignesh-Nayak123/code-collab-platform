@@ -1,7 +1,7 @@
 package com.cce.codeeditor.service;
 
 import com.cce.codeeditor.exception.RoomNotFoundException;
-import com.cce.codeeditor.kafka.ExecutionRequestProducer;
+import com.cce.codeeditor.execution.ExecutionDispatcher;
 import com.cce.codeeditor.model.dto.ExecutionRequest;
 import com.cce.codeeditor.model.dto.ExecutionResponse;
 import com.cce.codeeditor.model.entity.ExecutionResult;
@@ -9,7 +9,6 @@ import com.cce.codeeditor.model.entity.Room;
 import com.cce.codeeditor.model.enums.ExecutionStatus;
 import com.cce.codeeditor.repository.ExecutionResultRepository;
 import com.cce.codeeditor.repository.RoomRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,10 +34,7 @@ class CodeExecutionServiceTest {
     private RoomRepository roomRepository;
 
     @Mock
-    private ExecutionRequestProducer executionRequestProducer;
-
-    @Mock
-    private ObjectMapper objectMapper;
+    private ExecutionDispatcher executionDispatcher;
 
     @InjectMocks
     private CodeExecutionServiceImpl codeExecutionService;
@@ -60,8 +55,6 @@ class CodeExecutionServiceTest {
 
         when(roomRepository.findByRoomCode("TESTROOM")).thenReturn(Optional.of(room));
         when(executionResultRepository.save(any(ExecutionResult.class))).thenReturn(savedResult);
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
-        doNothing().when(executionRequestProducer).sendExecutionRequest(anyString(), anyString());
 
         ExecutionResponse response = codeExecutionService.submitExecution(request);
 
@@ -69,7 +62,7 @@ class CodeExecutionServiceTest {
         assertThat(response.getExecutionId()).isEqualTo(savedResult.getId());
         assertThat(response.getStatus()).isEqualTo("PENDING");
         verify(executionResultRepository).save(any(ExecutionResult.class));
-        verify(executionRequestProducer).sendExecutionRequest(anyString(), anyString());
+        verify(executionDispatcher).dispatch(savedResult, request);
     }
 
     @Test
@@ -83,6 +76,7 @@ class CodeExecutionServiceTest {
 
         assertThatThrownBy(() -> codeExecutionService.submitExecution(request))
                 .isInstanceOf(RoomNotFoundException.class);
+        verifyNoInteractions(executionDispatcher);
     }
 
     @Test

@@ -43,6 +43,9 @@ temp/
 # Stray Maven log file (no extension, written when Maven output is redirected)
 backend/org
 
+# Personal interview prep notes (not part of the project)
+interview.md
+
 # Load-test run artifacts (keep the scripts and ws-perf-report.md)
 loadtest/*.json
 loadtest/*.log

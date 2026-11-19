@@ -1,10 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 import type { CreateRoomRequest, CreateRoomResponse, Room, ExecutionRequest, ExecutionResponse } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
-
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

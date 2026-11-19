@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
+@ConditionalOnKafkaExecution
 public class KafkaTopicConfig {
 
     @Bean

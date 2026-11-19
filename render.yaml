@@ -1,0 +1,82 @@
+# Render Blueprint: free-tier demo of the backend.
+#   Dashboard -> New -> Blueprint -> pick this repo. Render reads this file.
+# Creates: Spring Boot web service (Docker), PostgreSQL, Key Value (Redis-compatible).
+# Kafka is not deployed; the "demo" Spring profile runs without it and disables
+# code execution (no Docker sandbox on Render).
+#
+# No secrets live in this file: DB credentials are wired from the managed
+# database at deploy time, and ALLOWED_ORIGINS is entered in the dashboard.
+# Keep every resource in the same region so they talk over the private network.
+
+services:
+  - type: web
+    name: cce-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod,demo
+      - key: EXECUTION_MODE
+        value: disabled
+      # 512 MB total: cap heap/metaspace/code cache, small thread stacks, SerialGC,
+      # C1-only JIT (faster boot on 0.1 CPU), and exit instead of limping on OOM.
+      - key: JAVA_OPTS
+        value: >-
+          -Xmx224m -Xss512k -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=48m
+          -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1
+          -XX:+ExitOnOutOfMemoryError
+      # Your Vercel origin(s), comma-separated, no trailing slash. Prompted on first deploy.
+      #   e.g. https://my-editor.vercel.app,https://my-editor-*-myteam.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DB_HOST
+        fromDatabase:
+          name: cce-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: cce-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: cce-postgres
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: cce-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: cce-postgres
+          property: password
+      # Spring Boot binds this to spring.data.redis.url (internal redis://host:port).
+      - key: SPRING_DATA_REDIS_URL
+        fromService:
+          type: keyvalue
+          name: cce-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: cce-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # private network only
+
+databases:
+  - name: cce-postgres
+    plan: free
+    region: oregon
+    databaseName: codeeditor
+    user: codeeditor
+    postgresMajorVersion: "16"
+    ipAllowList: [] # private network only
